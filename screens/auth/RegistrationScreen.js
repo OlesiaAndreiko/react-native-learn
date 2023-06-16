@@ -4,53 +4,43 @@ import {
   TextInput,
   View,
   Image,
+  ImageBackground,
   TouchableOpacity,
   Platform,
   KeyboardAvoidingView,
   Keyboard,
   TouchableWithoutFeedback,
 } from "react-native";
-import { useFonts } from "expo-font";
 import { useState } from "react";
 
 const initalState = {
   login: "",
   email: "",
   password: "",
-}
+};
 
 export default function RegistrationScreen() {
-  // const [isKeyboard, setIsKeyboard] = useState(false)
   const [isActiveLogin, setIsActiveLogin] = useState(false);
   const [isActiveEmail, setIsActiveEmail] = useState(false);  
   const [isActivePass, setIsActivePass] = useState(false);
   const [isSecurePass, setIsSecurePass] = useState(true);
   const [userData, setUserData] = useState(initalState);
 
-  const keyboardHide = () => {
-    Keyboard.dismiss();
-    // setIsKeyboard(false)
-  };
+  const keyboardHide = () => {Keyboard.dismiss()};
 
-  const handleActiveLogin = () => {setIsActiveLogin(true)}
+  const handleActiveLogin = () => {setIsActiveLogin(true)};
 
-  const handleBlurLogin = () => {setIsActiveLogin(false)}
+  const handleBlurLogin = () => {setIsActiveLogin(false)};
 
-  const handleActiveEmail = () => {
-    setIsActiveEmail(true)
-    // setIsKeyboard(true)
-  }
+  const handleActiveEmail = () => {setIsActiveEmail(true)};
 
-  const handleBlurEmail = () => {
-    setIsActiveEmail(false)
-    // setIsKeyboard(isKeyboard => !isKeyboard)
-  }
+  const handleBlurEmail = () => {setIsActiveEmail(false)};
 
-  const handleActivePass = () => {setIsActivePass(true)}
+  const handleActivePass = () => {setIsActivePass(true)};
 
-  const handleBlurPass = () => {setIsActivePass(false)}
+  const handleBlurPass = () => {setIsActivePass(false)};
 
-  const handleSecure = () => {setIsSecurePass(isSecurePass => !isSecurePass)}
+  const handleSecure = () => {setIsSecurePass(isSecurePass => !isSecurePass)};
  
   const handleUser = () => {
     console.log(userData)
@@ -59,29 +49,26 @@ export default function RegistrationScreen() {
     setIsActiveEmail(false)
     setIsActivePass(false)
     Keyboard.dismiss();
-  }
+  };
 
-  // console.log(Platform.OS)
-  const [fontsLoaded] = useFonts({
-    "Roboto-Regular": require("../assets/fonts/Roboto-Regular.ttf"),
-    "Roboto-Medium": require("../assets/fonts/Roboto-Medium.ttf"),
-  });
-
-  if (!fontsLoaded) {
-    return null;
-  }
-
+  
   return (
     <TouchableWithoutFeedback onPress={keyboardHide}>
-    {/* <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+       <View style={styles.container}>
+        <ImageBackground
+          source={require("../../assets/image/background.jpg")}
+          style={styles.image}
+        >
+     <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : ""}
+      keyboardVerticalOffset={120}
+      // style={{ flex: 1 }}
     >
-      <View style={{...styles.form, marginTop: isKeyboard ? -350 : 0}}>      */}
       <View style={styles.form}> 
         <View style={styles.imageWrap}>
           <TouchableOpacity style={styles.btnAddAvatar} activeOpacity={0.7}>
             <Image
-              source={require("../assets/image/add-icon.png")}
+              source={require("../../assets/image/add-icon.png")}
               style={styles.addIcon}
             ></Image>
           </TouchableOpacity>
@@ -138,20 +125,29 @@ export default function RegistrationScreen() {
             <Text style={styles.link}>Увійти</Text>
           </TouchableOpacity>
         </View>
-      </View>
-    {/* </KeyboardAvoidingView> */}
+        </View>
+        </KeyboardAvoidingView>
+        </ImageBackground>
+      </View>    
     </TouchableWithoutFeedback>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#fff",
+  },
+  image: {
+    flex: 1,
+    resizeMode: "cover ",
+    justifyContent: "flex-end",
+  },
   form: {
     height: 489,
-    // paddingTop: 92,
     borderTopLeftRadius: 25,
     borderTopRightRadius: 25,
     backgroundColor: "#FFFFFF",
-    // paddingBottom: 66
   },
   imageWrap: {
     position: "relative",
