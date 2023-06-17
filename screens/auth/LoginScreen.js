@@ -12,6 +12,7 @@ import {
   TouchableWithoutFeedback,
 } from "react-native";
 import { useState } from "react";
+import { useNavigation } from '@react-navigation/native';
 
 const initalState = {
   email: "",
@@ -23,6 +24,8 @@ export default function LoginScreen() {
   const [isActivePass, setIsActivePass] = useState(false);
   const [isSecurePass, setIsSecurePass] = useState(true);
   const [userData, setUserData] = useState(initalState);
+
+  const navigation = useNavigation();
 
   const keyboardHide = () => {
     Keyboard.dismiss();
@@ -54,6 +57,9 @@ export default function LoginScreen() {
     setIsActiveEmail(false);
     setIsActivePass(false);
     Keyboard.dismiss();
+    navigation.navigate("Home", {
+      screen: 'PostsScreen',
+   });
   };
 
   return (
@@ -134,7 +140,7 @@ export default function LoginScreen() {
               </TouchableOpacity>
               <View style={styles.linkWrap}>
                 <Text style={styles.linkText}>Немає акаунту?</Text>
-                <TouchableOpacity activeOpacity={0.7}>
+                <TouchableOpacity activeOpacity={0.7} onPress={() => navigation.navigate("Registration")}>
                   <Text style={styles.link}>Зареєструватися</Text>
                 </TouchableOpacity>
               </View>
