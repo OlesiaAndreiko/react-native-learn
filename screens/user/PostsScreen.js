@@ -1,6 +1,18 @@
-import { StyleSheet, Text, View } from "react-native";
+import { useEffect, useState } from "react";
+import { StyleSheet, Text, View, FlatList } from "react-native";
 
-export default function PostsScreen() {
+export default function PostsScreen({route}) {
+const [posts, setPosts] = useState([]);
+console.log(route.params)
+
+useEffect(() => {
+if(route.params) {
+  setPosts((prevState) => [...prevState, route.params])
+}
+}, [route.params])
+
+console.log(posts)
+
   return (
     <>
       <View style={styles.container}>
