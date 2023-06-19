@@ -22,7 +22,7 @@ export default function App() {
 
   return (
     <NavigationContainer>
-       <MainStack.Navigator initialRouteName="Login" screenOptions={{}}>
+       <MainStack.Navigator initialRouteName="Login">
         <MainStack.Screen
           options={{
             headerShown: false,

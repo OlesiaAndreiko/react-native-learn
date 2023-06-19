@@ -1,39 +1,23 @@
 import { useEffect, useState } from "react";
-import { StyleSheet, Text, View, FlatList } from "react-native";
+import { StyleSheet, Text, View, Image, FlatList } from "react-native";
+import { createStackNavigator } from "@react-navigation/stack";
+import DefaultScreen from "../nested/DefaultScreen";
+import CommentsScreen from "../nested/CommentsScreen";
+import MapScreen from "../nested/MapScreen";
 
-export default function PostsScreen({route}) {
-const [posts, setPosts] = useState([]);
-console.log(route.params)
 
-useEffect(() => {
-if(route.params) {
-  setPosts((prevState) => [...prevState, route.params])
-}
-}, [route.params])
+const NestedStack = createStackNavigator();
 
-console.log(posts)
+export default function PostsScreen() {
+
 
   return (
-    <>
-      <View style={styles.container}>
-        <Text style={styles.title}>PostsScreen</Text>
-      </View>
-    </>
+    <NestedStack.Navigator >
+      <NestedStack.Screen name="DefaultScreen" component={DefaultScreen} options={{headerShown: false,}}/>
+      <NestedStack.Screen name="Comments" component={CommentsScreen}/>
+      <NestedStack.Screen name="Map" component={MapScreen} />
+    </NestedStack.Navigator>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-    justifyContent:"center",
-  },
-  title: {
-    fontFamily: "Roboto-Medium",
-    fontSize: 30,
-    lineHeight: 35,
-    textAlign: "center",
-    letterSpacing: 0.72,
-    color: "#FF6C00",
-  },
-});
+

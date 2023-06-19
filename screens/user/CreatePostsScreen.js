@@ -1,87 +1,169 @@
-import { StyleSheet, View, Text, TextInput, Image, TouchableOpacity } from "react-native";
+import {
+  StyleSheet,
+  View,
+  Text,
+  TextInput,
+  Image,
+  TouchableOpacity,
+  Keyboard,
+  TouchableWithoutFeedback,
+} from "react-native";
 // import {TouchableOpacity} from "react-native-gesture-handler"
 import { Camera } from "expo-camera";
-// import camera from "../../assets/image/camera.svg"
-// import { Ionicons } from '@expo/vector-icons';
 import {} from "expo-media-library";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigation } from "@react-navigation/native";
+import * as Location from 'expo-location';
 
 const initalState = {
   namePost: "",
+  location: "",
 };
 
 export default function CreatePostsScreen() {
-  const [camera, setCamera] = useState(null);
+  const [cameraRef, setCameraRef] = useState(null);
   const [photo, setPhoto] = useState(null);
   const [postData, setPostData] = useState(initalState);
-
+  const [isCreatePhoto, setIsCreatePhoto] = useState(false); // for button color
+  const [isCreateTitle, setIsCreateTitle] = useState(false); // for button color
+  const [isCreateLocation, setIsCreateLocation] = useState(false); // for button color
+  // const [location, setLocation] = useState(null);
+  const [errorMsg, setErrorMsg] = useState(null);
   const navigation = useNavigation();
+  const keyboardHide = () => {Keyboard.dismiss()};
+
+  const addTitlePhoto = (value) => {
+  setIsCreateTitle(true);
+  setPostData((prevState) => ({ ...prevState, namePost: value }));
+  };
+
+  const addLocation = (value) => {
+    setIsCreateLocation(true);
+    setPostData((prevState) => ({ ...prevState, location: value }));
+    };
+
+  const takeMap = () => {
+    navigation.navigate("Map")
+  }
 
   const takePhoto = async () => {
-    const photo = await camera.takePictureAsync();
-    setPhoto(photo.uri);
+    const photo = await cameraRef.takePictureAsync();
     
-    console.log("photo", photo);
+    setPhoto(photo.uri);
+    setIsCreatePhoto(true);
+   
+    // console.log("photo", photo);
+   
     // await MediaLibrary.createAssetAsync(uri);
   };
 
-  const sendPhoto = () => {
-    navigation.navigate("PostsScreen", { photo, postData });
-    setPostData(initalState)
+  const sendPhoto = async () => {
+    const location = await Location.getCurrentPositionAsync();
+    const coords = {
+      latitude: location.coords.latitude,
+      longitude: location.coords.longitude,
+    };
+    // setLocation(coords);
+    // console.log(coords);
+    setPostData((prevState) => ({ ...prevState, coords: coords }));
+
+    navigation.navigate("DefaultScreen", { photo, postData, coords, });
+
+    setPostData(initalState);
+    setIsCreatePhoto(false);
+    setIsCreateTitle(false);
   };
 
-  return (
-    <>
-      <View style={styles.container}>
-        <Camera style={styles.camera} ref={setCamera}>
-          {photo && (
-            <View style={styles.takePhotoWrap}>
-              <Image
-                style={styles.takePhotoImage}
-                source={{ uri: photo }}
-              ></Image>
-            </View>
-          )}
-          <TouchableOpacity
-            style={styles.buttonCamera}
-            activeOpacity={0.5}
-            onPress={takePhoto}
-          >
-            <Image source={require("../../assets/image/camera.png")}></Image>
-          </TouchableOpacity>
-        </Camera>
-        
-        <View style={styles.form}>
-       <Text style={styles.textLoad}>Завантажте фото</Text>
-       
-        <TextInput
-                  style={{
-                    ...styles.input,
-                    // borderColor: isActiveEmail ? "#FF6C00" : "#E8E8E8",
-                  }}
-                  value={postData.namePost}
-                  placeholder="Назва..."
-                  placeholderTextColor="#BDBDBD"
-                  maxLength={35}
-                  // onFocus={handleActiveEmail}
-                  // onBlur={handleBlurEmail}
-                  onChangeText={(value) =>
-                    setPostData((prevState) => ({ ...prevState, namePost: value }))
-                  }
-                />
-         
-          <TouchableOpacity
-            style={styles.button}
-            activeOpacity={0.7}
-            onPress={sendPhoto}
-          >
-            <Text style={styles.buttonTitle}>Опубліковати</Text>
-          </TouchableOpacity>
+ 
+  useEffect(() => {
+    (async () => {      
+      let { status } = await Location.requestForegroundPermissionsAsync();
+
+      if (status !== 'granted') {
+        setErrorMsg('Permission to access location was denied');
+        console.log(errorMsg);
+        return;
+      } 
+
+      // let location = await Location.getCurrentPositionAsync({});
+      // setLocation(location);
+    })();
+  }, []);
+
+  // let text = 'Waiting..';
+  // if (errorMsg) {
+  //   text = errorMsg;
+  // } else if (location) {
+  //   text = JSON.stringify(location);
+  // }
+  return (    
+      <TouchableWithoutFeedback onPress={keyboardHide}>
+        <View style={styles.container}>
+          <Camera style={styles.camera} ref={setCameraRef}>
+            {photo && (
+              <View style={styles.takePhotoWrap}>
+                <Image
+                  style={styles.takePhotoImage}
+                  source={{ uri: photo }}
+                ></Image>
+              </View>
+            )}
+            <TouchableOpacity
+              style={styles.buttonCamera}
+              activeOpacity={0.5}
+              onPress={takePhoto}
+            >
+              <Image source={require("../../assets/image/camera.png")}></Image>
+            </TouchableOpacity>
+          </Camera>
+          <Text style={styles.textLoad}>
+            {isCreatePhoto ? "Редагувати фото" : "Завантажте фото"}
+          </Text>
+          <View style={styles.form}>
+            <TextInput
+              style={styles.input}
+              value={postData.namePost}
+              placeholder="Назва..."
+              placeholderTextColor="#BDBDBD"
+              maxLength={35}
+              onChangeText={addTitlePhoto}
+            />
+            <View>
+              <TextInput
+              style={styles.inputMap}
+              value={postData.location}
+              placeholder="Місцевість......"
+              placeholderTextColor="#BDBDBD"
+              maxLength={35}
+              onChangeText={addLocation}
+             />
+              <TouchableOpacity
+                    style={styles.mapIcon}
+                    activeOpacity={0.7}
+                    onPress={takeMap}
+                  >
+                  <Image source={require("../../assets/image/map-pin.png")}/>
+              </TouchableOpacity>
+            </View>            
+            <TouchableOpacity
+              style={{
+                ...styles.button,
+                backgroundColor: isCreatePhoto && isCreateTitle && isCreateLocation ? "#FF6C00" : "#F6F6F6",
+              }}
+              activeOpacity={0.7}
+              onPress={sendPhoto}
+            >
+              <Text
+                style={{
+                  ...styles.buttonTitle, color: isCreatePhoto && isCreateTitle && isCreateLocation ? "#FFFFFF" : "#BDBDBD",
+                }}
+              >
+                Опубліковати
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
-        {/* <Text style={styles.title}>CreatePostsScreen</Text> */}
-      </View>
-    </>
+      </TouchableWithoutFeedback> 
   );
 }
 
@@ -89,34 +171,20 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
-    // width: "100%",
     paddingTop: 32,
-
-    // alignSelf: "center",
     alignItems: "center",
-    // justifyContent:"center",
   },
-
-  // title: {
-  //   fontFamily: "Roboto-Medium",
-  //   fontSize: 30,
-  //   lineHeight: 35,
-  //   textAlign: "center",
-  //   letterSpacing: 0.72,
-  //   color: "#FF6C00",
-  // },
   camera: {
     width: 343,
     height: 240,
 
     alignItems: "center",
     justifyContent: "center",
-    overflow: "hidden",
+    // overflow: "hidden",
 
-    border: 2,
+    border: 50,
     borderRadius: 10,
-    borderColor: "#E8E8E8",
-
+    // borderColor: "#E8E8E8",
     // backgroundColor: "#F6F6F6",
 
     marginBottom: 32,
@@ -136,32 +204,54 @@ const styles = StyleSheet.create({
 
   takePhotoWrap: {
     position: "absolute",
-    top: 0,
-    left: 0,
-    // borderWidth: 2,
-    // borderColor: "white",
-    // borderRadius:10
+    top: -3,
+    left: -3,
   },
   takePhotoImage: {
-    width: 343,
-    height: 240,
+    width: 349,
+    height: 245,
     borderRadius: 10,
   },
-  
-  textLoad:{
+
+  textLoad: {
+    width: 343,
+    textAlign: "left",
     marginTop: -20,
     fontSize: 16,
     lineHeight: 19,
     fontFamily: "Roboto-Regular",
     color: Platform.OS === "ios" ? "red" : "#BDBDBD",
-    // textAlign: 'left'
   },
   form: {
+    paddingTop: 32,
     gap: 32,
   },
-  input:{
-    borderBottomWidth:1,
-    borderBottomColor: '#E8E8E8',
+  mapWrap: {
+
+  },
+  input: {
+    borderBottomWidth: 1,
+    borderBottomColor: "#E8E8E8",
+    paddingTop: 15,
+    paddingBottom: 15,
+    color: "#212121",
+    height: 50,
+    fontSize: 16,
+    lineHeight: 19,
+    fontFamily: "Roboto-Regular",
+  },
+  mapIcon:{
+    borderColor: "red",
+    position: "absolute",
+    top: 10,
+    left: 0,
+  },
+  inputMap: {
+    borderBottomWidth: 1,
+    borderBottomColor: "#E8E8E8",
+    paddingLeft: 30,
+    paddingTop: 15,
+    paddingBottom: 15,
     color: "#212121",
     height: 50,
     fontSize: 16,
@@ -174,7 +264,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderRadius: 100,
-    // marginHorizontal: 16,
     marginTop: 16,
     ...Platform.select({
       ios: {

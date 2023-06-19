@@ -56,7 +56,7 @@ export default function LoginScreen() {
     setUserData(initalState);
     setIsActiveEmail(false);
     setIsActivePass(false);
-    Keyboard.dismiss();
+    keyboardHide();
     navigation.navigate("Home", {
       screen: 'PostsScreen',
    });
