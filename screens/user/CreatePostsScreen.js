@@ -8,12 +8,12 @@ import {
   Keyboard,
   TouchableWithoutFeedback,
 } from "react-native";
-// import {TouchableOpacity} from "react-native-gesture-handler"
 import { Camera } from "expo-camera";
 import {} from "expo-media-library";
 import { useEffect, useState } from "react";
 import { useNavigation } from "@react-navigation/native";
 import * as Location from 'expo-location';
+import * as MediaLibrary from "expo-media-library";
 
 const initalState = {
   namePost: "",
@@ -22,12 +22,15 @@ const initalState = {
 
 export default function CreatePostsScreen() {
   const [cameraRef, setCameraRef] = useState(null);
+  const [type, setType] = useState(Camera.Constants.Type.back);
+  const [hasPermission, setHasPermission] = useState(null);
+  
   const [photo, setPhoto] = useState(null);
   const [postData, setPostData] = useState(initalState);
   const [isCreatePhoto, setIsCreatePhoto] = useState(false); // for button color
   const [isCreateTitle, setIsCreateTitle] = useState(false); // for button color
   const [isCreateLocation, setIsCreateLocation] = useState(false); // for button color
-  // const [location, setLocation] = useState(null);
+  const [location, setLocation] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
   const navigation = useNavigation();
   const keyboardHide = () => {Keyboard.dismiss()};
@@ -37,24 +40,31 @@ export default function CreatePostsScreen() {
   setPostData((prevState) => ({ ...prevState, namePost: value }));
   };
 
-  const addLocation = (value) => {
+  const addLocation = async(value) => {
     setIsCreateLocation(true);
     setPostData((prevState) => ({ ...prevState, location: value }));
     };
-
-  const takeMap = () => {
-    navigation.navigate("Map")
+    
+  const takeMap = async () => {
+    
+    const googleMapsApiKEY = "AIzaSyDgISLeVu2S3tpcDlBBuosf-4SwKBZZmmI"
+    const loc = Location.reverseGeocodeAsync({"latitude": location.coords.latitude, "longitude": location.coords.longitude}, Location.setGoogleApiKey(googleMapsApiKEY))
+    console.log(loc)
+    console.log("має бути визначеняя геопозиції і трансформ в місто перебування")
   }
 
   const takePhoto = async () => {
-    const photo = await cameraRef.takePictureAsync();
-    
-    setPhoto(photo.uri);
+    const { uri } = await cameraRef.takePictureAsync();
+    setType(
+      type === Camera.Constants.Type.back
+        ? Camera.Constants.Type.front
+        : Camera.Constants.Type.back
+    )
+    setPhoto(uri);
     setIsCreatePhoto(true);
    
-    // console.log("photo", photo);
-   
-    // await MediaLibrary.createAssetAsync(uri);
+    // console.log("photo", uri);   
+    await MediaLibrary.createAssetAsync(uri);
   };
 
   const sendPhoto = async () => {
@@ -65,13 +75,19 @@ export default function CreatePostsScreen() {
     };
     // setLocation(coords);
     // console.log(coords);
-    setPostData((prevState) => ({ ...prevState, coords: coords }));
+    setPostData((prevState) => ({ ...prevState, coords: coords }));    
 
+    if (!isCreatePhoto || !isCreateTitle || !isCreateLocation) {
+      console.log("щось не заповнено")
+      return;
+    }
+    
     navigation.navigate("DefaultScreen", { photo, postData, coords, });
 
     setPostData(initalState);
     setIsCreatePhoto(false);
     setIsCreateTitle(false);
+    setIsCreateLocation(false);    
   };
 
  
@@ -85,21 +101,39 @@ export default function CreatePostsScreen() {
         return;
       } 
 
-      // let location = await Location.getCurrentPositionAsync({});
-      // setLocation(location);
+      let location = await Location.getCurrentPositionAsync();
+      setLocation(location);
     })();
+
+    (async () => {
+      const { status } = await Camera.requestCameraPermissionsAsync();
+      setHasPermission(status === "granted");
+
+      const {granted} = await MediaLibrary.requestPermissionsAsync()
+      console.log(granted)
+
+      if(!(status === "granted") || !granted) {
+        console.log("не отримані дозволи")
+        return;
+      }
+    })();
+
   }, []);
 
-  // let text = 'Waiting..';
-  // if (errorMsg) {
-  //   text = errorMsg;
-  // } else if (location) {
-  //   text = JSON.stringify(location);
-  // }
-  return (    
-      <TouchableWithoutFeedback onPress={keyboardHide}>
+  
+  if (hasPermission === null) {
+    return <View />;
+  }
+  if (hasPermission === false) {
+    return <Text>No access to camera</Text>;
+  }
+
+  return ( 
+  <TouchableWithoutFeedback onPress={keyboardHide}>
         <View style={styles.container}>
-          <Camera style={styles.camera} ref={setCameraRef}>
+          <Camera style={styles.camera} ref={setCameraRef} 
+          type={type}
+          >
             {photo && (
               <View style={styles.takePhotoWrap}>
                 <Image
@@ -164,7 +198,7 @@ export default function CreatePostsScreen() {
           </View>
         </View>
       </TouchableWithoutFeedback> 
-  );
+  )      
 }
 
 const styles = StyleSheet.create({
@@ -241,7 +275,7 @@ const styles = StyleSheet.create({
     fontFamily: "Roboto-Regular",
   },
   mapIcon:{
-    borderColor: "red",
+    // borderColor: "red",
     position: "absolute",
     top: 10,
     left: 0,
@@ -283,119 +317,3 @@ const styles = StyleSheet.create({
     color: Platform.OS === "ios" ? "#FF6C00" : "#BDBDBD",
   },
 });
-
-// import React, { useState, useEffect, useRef } from "react";
-// import { Text, View, TouchableOpacity, StyleSheet } from "react-native";
-// import { Camera } from "expo-camera";
-// import * as MediaLibrary from "expo-media-library";
-
-// export default function CreatePostsScreen() {
-//   const [hasPermission, setHasPermission] = useState(null);
-//   const [cameraRef, setCameraRef] = useState(null);
-//   const [type, setType] = useState(Camera.Constants.Type.back);
-
-//   useEffect(() => {
-//     (async () => {
-//       const { status } = await Camera.requestCameraPermissionsAsync();
-//       await MediaLibrary.requestPermissionsAsync();
-
-//       setHasPermission(status === "granted");
-//     })();
-//   }, []);
-
-//   if (hasPermission === null) {
-//     return <View />;
-//   }
-//   if (hasPermission === false) {
-//     return <Text>No access to camera</Text>;
-//   }
-
-//   return (
-//     <View style={styles.container}>
-//       <Camera
-//         style={styles.camera}
-//         type={type}
-//         ref={setCameraRef}
-//       >
-//         <View style={styles.photoView}>
-//           <TouchableOpacity
-//             style={styles.flipContainer}
-//             onPress={() => {
-//               setType(
-//                 type === Camera.Constants.Type.back
-//                   ? Camera.Constants.Type.front
-//                   : Camera.Constants.Type.back
-//               );
-//             }}
-//           >
-//             <Text style={{ fontSize: 18, marginBottom: 10, color: "white" }}>
-//               {" "}
-//               Flip{" "}
-//             </Text>
-//           </TouchableOpacity>
-//           <TouchableOpacity
-//             style={styles.button}
-//             onPress={async () => {
-//               if (cameraRef) {
-//                 const { uri } = await cameraRef.takePictureAsync();
-//                 await MediaLibrary.createAssetAsync(uri);
-//               }
-//             }}
-//           >
-//             <View style={styles.takePhotoOut}>
-//               <View style={styles.takePhotoInner}></View>
-//             </View>
-//           </TouchableOpacity>
-//         </View>
-//       </Camera>
-//     </View>
-//   );
-// }
-
-// const styles = StyleSheet.create({
-//   container: { flex: 1 },
-//   camera: {
-//         width: 343,
-//         height: 240,
-//         alignItems:"center",
-//         justifyContent:"center",
-
-//         border: 1,
-//         borderRadius: 8,
-//         borderColor: "#E8E8E8",
-//         backgroundColor: "#F6F6F6",
-//     //     // backgroundColor: "transparent",
-//       },
-//   photoView: {
-//     flex: 1,
-//     backgroundColor: "transparent",
-//     justifyContent: "flex-end",
-//   },
-
-//   flipContainer: {
-//     flex: 0.1,
-//     alignSelf: "flex-end",
-//   },
-
-//   button: { alignSelf: "center" },
-
-//   takePhotoOut: {
-//     borderWidth: 2,
-//     borderColor: "white",
-//     height: 50,
-//     width: 50,
-//     display: "flex",
-//     justifyContent: "center",
-//     alignItems: "center",
-//     borderRadius: 50,
-//   },
-
-//   takePhotoInner: {
-//     borderWidth: 2,
-//     borderColor: "white",
-//     height: 40,
-//     width: 40,
-//     backgroundColor: "white",
-//     borderRadius: 50,
-//   },
-// });

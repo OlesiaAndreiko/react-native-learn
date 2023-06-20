@@ -1,11 +1,21 @@
 import { useEffect, useState } from "react";
-import { StyleSheet, Text, View, Image, FlatList, Button } from "react-native";
+import { StyleSheet, Text, View, Image, FlatList, TouchableOpacity, Button } from "react-native";
 import { useNavigation } from '@react-navigation/native';
 
 export default function DefaultScreen({ route }) {
 const navigation = useNavigation();
   const [posts, setPosts] = useState([]);
-  
+   // console.log(posts);
+
+  const takeMap = () => {
+    // console.log(route.params.coords)
+    const currentCoords = {"latitude": route.params.coords.latitude, "longitude": route.params.coords.longitude}
+    navigation.navigate("Map",  {currentCoords})
+  }
+
+  const takeComments = () => {
+    navigation.navigate("Comments")
+ }  
   // console.log(route.params);
 
   useEffect(() => {
@@ -13,8 +23,6 @@ const navigation = useNavigation();
       setPosts((prevState) => [...prevState, route.params]);
     }
   }, [route.params]);
-
-  console.log(posts);
 
   return (
     <>
@@ -29,20 +37,28 @@ const navigation = useNavigation();
             <Image source={{ uri: photo }} style={styles.image} />
             <Text style={styles.title}>{postData.namePost}</Text>
             <View style={styles.detalis}> 
-            {/* <View>
-                    <Image />
-                    <Text></Text>
-                </View> */}
-                <View>
-                {/* <Image /> */}
-                    <Text style={styles.location}>{postData.location}</Text>
-                </View>
+              <View style={styles.detalisWrap}>
+                <TouchableOpacity
+                    activeOpacity={0.7}
+                    onPress={takeComments}
+                >
+                  <Image source={require("../../assets/image/message-circle.png")}/> 
+                </TouchableOpacity>
+                  <Text>0</Text>
+              </View>
+              <View style={styles.detalisWrap}>
+                <TouchableOpacity
+                    activeOpacity={0.7}
+                    onPress={takeMap}
+                >
+                  <Image source={require("../../assets/image/map-pin.png")}/>
+                </TouchableOpacity>
+                  <Text style={styles.detalisLocation}>{postData.location}</Text>
+              </View>
             </View>           
             </View>
           )}
         />
-        <Button title="go to map" onPress={()=> {navigation.navigate("Map")}} />
-        <Button title="go to comments" onPress={()=> {navigation.navigate("Comments")}} />
       </View>
     </>
   );
@@ -71,11 +87,18 @@ const styles = StyleSheet.create({
     color: "#212121",
     marginBottom: 11,
   },
-  detalis: {
+  detalis: {    
     justifyContent: "space-between",
+    flexDirection: "row",
     marginBottom: 34,
   },
-  location: {
+  detalisWrap: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 8
+  },
+  detalisLocation: {
     fontFamily: "Roboto-Regular",
     fontSize: 16,
     lineHeight: 19,
